@@ -67,48 +67,81 @@ __global__  void gradient_triangle(Screen::ScreenRef screen, const Vector2 A, co
 
 
 
-std::vector<Sphere> spheres{{{0, -10, 0}, 1.0}};
 
-__device__ Vector3 directionFromXY(Camera c, unsigned int x, unsigned int y){
+
+__device__ __host__ Vector3 directionFromXY(Camera c, unsigned int x, unsigned int y){
     return (c.topLeft + x * c.pixelDx + y * c.pixelDy).normalize();
 }
 
 
-__global__ void calculatePixel(Screen::ScreenRef screen, Sphere* d_spheres, unsigned int spheresSize, Camera camera){
+__global__ void calculatePixel(Screen::ScreenRef screen, Sphere* d_spheres, unsigned int spheresSize, Camera camera) {
     unsigned int x = threadIdx.x + blockIdx.x * blockDim.x;
     unsigned int y = threadIdx.y + blockIdx.y * blockDim.y;
     if (x >= screen.sizeX || y >= screen.sizeY) return;
 
     Vector3 direction = directionFromXY(camera, x, y);
 
-    Sphere* closest = nullptr;
-    double minDistance;
-    for (int i = 0; i < spheresSize; ++i){
-        Sphere* sphere = d_spheres + i;
-        double delta = (direction * (camera.origin - sphere->center)).squared() - ((camera.origin - sphere->center).squared() - sphere->radius * sphere->radius);
-        if (delta > 0) continue;
-        double distance = -(direction * (camera.origin - sphere->center)) - sqrt(delta);
-        if (distance < minDistance) {
-            closest = sphere;
-            minDistance = distance;
-        }
-    }
-    if (closest == nullptr) return;
-    
+//    Sphere *closest = nullptr;
+//    double minDistance;
+//    for (int i = 0; i < spheresSize; ++i) {
+//        Sphere *sphere = d_spheres + i;
+//        double delta = pow((direction.dot(camera.origin - sphere->center)), 2) - ((camera.origin -
+//                                                                                   sphere->center).squared() -
+//                                                                                  sphere->radius * sphere->radius);
+//        if (delta < 0) continue;
+//        double distance = -(direction.dot(camera.origin - sphere->center)) - sqrt(delta);
+//        if (distance < minDistance) {
+//            closest = sphere;
+//            minDistance = distance;
+//        }
+//    }
+//    if (closest == nullptr) return;
+
+    Sphere *sphere = d_spheres;
+    double delta = pow((direction.dot(camera.origin - sphere->center)), 2) - ((camera.origin -
+                                                                               sphere->center).squared() -
+                                                                              sphere->radius * sphere->radius);
+    if (delta < 0) return;
+
+
+
+    screen.d_image[x + screen.sizeX * y] = {(unsigned char)(delta / (sphere->radius) / (sphere->radius) * 128), 0, 0};
+
+
 }
 
 int main(){
-//    Screen screen {1920, 1080};
+    Screen screen {1920, 1080};
 
 //    Vector2 A = {100, 500}, B  = {100, 1000}, C = {2000, 2000}, D = {1900, 100};
 ////    screen.cudaExecute(gradient_triangle, A, C, D, Color {255, 0, 0}, Color {0, 255, 0}, Color {0, 0, 255});
 //    screen.cudaExecute(gradient_triangle, A, B, C, Color {255, 0, 0}, Color {0, 255, 0}, Color {0, 0, 255});
 //    screen.copy(cudaMemcpyDeviceToHost);
 //    screen.save("out.ppm");
-
+    std::vector<Sphere> spheres{{{0, 0, -100}, 10.0}};
     Sphere* d_spheres;
     cudaMalloc(&d_spheres, sizeof(Sphere) * spheres.size());
-    cudaMemcpy(d_spheres, spheres.data(), spheres.size(), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_spheres, spheres.data(), spheres.size() * sizeof(Sphere), cudaMemcpyHostToDevice);
+
+    Camera camera {60.0/180.0 * 3.1415, 1920, 1080};
+
+    screen.cudaExecute(calculatePixel, d_spheres, spheres.size(), camera);
+    screen.copy(cudaMemcpyDeviceToHost);
+    screen.save("out.ppm");
+//    for (unsigned int y = 0; y < 100; ++y) {
+//        for (unsigned int x = 0; x < 300; ++x) {
+//            Vector3 direction = directionFromXY(camera, x, y);
+//            Sphere *sphere = spheres.data();
+//            double delta = pow((direction.dot(camera.origin - sphere->center)), 2) - ((camera.origin -
+//                                                                                       sphere->center).squared() -
+//                                                                                      sphere->radius * sphere->radius);
+//            if (delta > 0) cout << "#";
+//            else cout << " ";
+//        }
+//        cout << "\n";
+//    }
+
+
 
     return 0;
 }

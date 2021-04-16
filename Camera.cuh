@@ -11,12 +11,15 @@
 
 class Camera {
 public:
+    Camera(double fov, unsigned int x, unsigned int y);
+
+public:
     Matrix4 position;
     double fov;
     const unsigned int x, y;
     Vector3 topLeft;
     Vector3 pixelDx, pixelDy;
-
+    Vector3 origin;
 
 };
 

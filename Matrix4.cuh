@@ -13,6 +13,9 @@ class Matrix4 {
 public:
     double data [4][4];
     Matrix4(std::initializer_list<double> data) noexcept;
+
+    Matrix4();
+
     __host__ __device__ double* operator[](unsigned long x);
 
     static Matrix4 fromAxisAngle(Vector3 axis, double angle);

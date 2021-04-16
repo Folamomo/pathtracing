@@ -39,3 +39,9 @@ Matrix4 Matrix4::fromTranslationVector(const Vector3 &v) {
             0, 0, 1, v.z,
             0, 0, 0, 1};
 }
+
+Matrix4::Matrix4() :Matrix4{1, 0, 0, 0,
+                            0, 1, 0, 0,
+                            0, 0, 1, 0,
+                            0, 0, 0, 1}{}
+
