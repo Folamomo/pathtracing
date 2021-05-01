@@ -25,5 +25,6 @@ public:
 __device__ __host__ Vector3 operator *(double s, const Vector3& v);
 __device__ __host__ Vector3 operator +(const Vector3& l, const Vector3& v);
 __device__ __host__ Vector3 operator -(const Vector3& l, const Vector3& v);
+__device__ __host__ Vector3 operator -(const Vector3& l);
 
 #endif //CUDATEST_VECTOR3_CUH

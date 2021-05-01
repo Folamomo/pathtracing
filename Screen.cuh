@@ -12,9 +12,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <stdexcept>
+#include <iostream>
 
 #define BLOCK_X 32
-#define BLOCK_Y 16
+#define BLOCK_Y 32
 
 class Screen {
 public:
@@ -30,9 +31,14 @@ public:
     ~Screen();
 
     template<typename F, typename... A>
-    auto cudaExecute(F f, A... a) {
-        f<<<dim3(sizeX/BLOCK_X + 1, sizeY/BLOCK_Y + 1), dim3(BLOCK_X, BLOCK_Y)>>>(*this, a...);
+    void cudaExecute(F f, A... a) {
+        cudaError error = cudaGetLastError();
+        if (error != cudaSuccess) std::cout << "Error before cudaExecute: " << cudaGetErrorString(error);
+        f<<<dim3((sizeX + BLOCK_X - 1)/BLOCK_X, (sizeY + BLOCK_Y - 1)/BLOCK_Y), dim3(BLOCK_X, BLOCK_Y)>>>(*this, a...);
+        error = cudaGetLastError();
+        if (error != cudaSuccess) std::cout << "Error in cudaExecute: " << cudaGetErrorString(error);
     }
+
 
     //copies memory from/to device
     void copy(cudaMemcpyKind dir);

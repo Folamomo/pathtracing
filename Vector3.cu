@@ -39,3 +39,7 @@ __device__ __host__ Vector3 operator+(const Vector3 &l, const Vector3 &r) {
 __device__ __host__ Vector3 operator-(const Vector3 &l, const Vector3 &r) {
     return {l.x - r.x, l.y - r.y, l.z - r.z};
 }
+
+__device__ __host__ Vector3 operator-(const Vector3 &l) {
+    return -1 * l;
+}

@@ -7,12 +7,14 @@
 
 
 #include "Vector3.cuh"
+#include "Color.cuh"
 
 class Sphere {
 public:
-    Sphere(const Vector3 &center, double radius);
+    Sphere(const Vector3 &center, double radius, const Color &color);
     double radius;
     Vector3 center;
+    Color color;
 };
 
 

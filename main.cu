@@ -13,11 +13,13 @@
 #include <stdexcept>
 #include <iostream>
 #include <vector>
+#include <stdio.h>
 
 using namespace std;
 
 
-#define prune(number) (number = number < 0 ? 0 : number > 1 ? 1 : number)
+#define prune(number) ( number = number < 0 ? 0 : number > 1 ? 1 : number )
+#define clip(number) (unsigned char)( number = number < 0 ? 0 : number > 255 ? 255 : number )
 
 
 __global__  void gradient(Screen::ScreenRef screen, const Vector2 left, const Vector2 right,
@@ -73,6 +75,80 @@ __device__ __host__ Vector3 directionFromXY(Camera c, unsigned int x, unsigned i
     return (c.topLeft + x * c.pixelDx + y * c.pixelDy).normalize();
 }
 
+struct convMask{
+    double data[3][3];
+    __device__ __host__ double*  operator[](std::size_t at);
+    __device__ __host__ convMask(std::initializer_list<double> data) noexcept;
+};
+
+__device__ __host__ double* convMask::operator[](std::size_t at){
+    return data[at];
+}
+__device__ __host__ convMask::convMask(std::initializer_list<double> list) noexcept : data() {
+    int i = 0;
+    double sum = 0;
+    for(double d: list){
+        data[0][i] = d;
+        sum += d;
+        ++i;
+    }
+
+    for (int j = 0; j < 9; ++j){
+        data[0][j] /= sum;
+    }
+}
+
+
+
+__global__ void convolution(Screen::ScreenRef screen, convMask mask, Color* result){
+    __shared__ Color old[BLOCK_X * BLOCK_Y];
+    int x = threadIdx.x - 1 + blockIdx.x * (blockDim.x - 2);
+    int y = threadIdx.y - 1 + blockIdx.y * (blockDim.y - 2);
+
+    if (x >= screen.sizeX || y >= screen.sizeY) return;
+
+    x = x < 0 ? 0 : x >= screen.sizeX ? screen.sizeX - 1 : x;
+    y = y < 0 ? 0 : y >= screen.sizeY ? screen.sizeY - 1 : y;
+    unsigned int shared_pos = threadIdx.x + threadIdx.y * BLOCK_X;
+    old[shared_pos] = screen.d_image[y * screen.sizeX + x];
+
+    if (threadIdx.x == 0 || threadIdx.y == 0 || threadIdx.x == BLOCK_X - 1 || threadIdx.y == BLOCK_Y - 1 ) return;
+
+    __syncthreads();
+
+    double r = old[shared_pos - 1 - BLOCK_X].r * mask[0][0] +
+               old[shared_pos     - BLOCK_X].r * mask[0][1] +
+               old[shared_pos + 1 - BLOCK_X].r * mask[0][2] +
+               old[shared_pos - 1          ].r * mask[1][0] +
+               old[shared_pos              ].r * mask[1][1] +
+               old[shared_pos + 1          ].r * mask[1][2] +
+               old[shared_pos - 1 + BLOCK_X].r * mask[2][0] +
+               old[shared_pos     + BLOCK_X].r * mask[2][1] +
+               old[shared_pos + 1 + BLOCK_X].r * mask[2][2];
+
+    double g = old[shared_pos - 1 - BLOCK_X].g * mask[0][0] +
+               old[shared_pos     - BLOCK_X].g * mask[0][1] +
+               old[shared_pos + 1 - BLOCK_X].g * mask[0][2] +
+               old[shared_pos - 1          ].g * mask[1][0] +
+               old[shared_pos              ].g * mask[1][1] +
+               old[shared_pos + 1          ].g * mask[1][2] +
+               old[shared_pos - 1 + BLOCK_X].g * mask[2][0] +
+               old[shared_pos     + BLOCK_X].g * mask[2][1] +
+               old[shared_pos + 1 + BLOCK_X].g * mask[2][2];
+
+    double b = old[shared_pos - 1 - BLOCK_X].b * mask[0][0] +
+               old[shared_pos     - BLOCK_X].b * mask[0][1] +
+               old[shared_pos + 1 - BLOCK_X].b * mask[0][2] +
+               old[shared_pos - 1          ].b * mask[1][0] +
+               old[shared_pos              ].b * mask[1][1] +
+               old[shared_pos + 1          ].b * mask[1][2] +
+               old[shared_pos - 1 + BLOCK_X].b * mask[2][0] +
+               old[shared_pos     + BLOCK_X].b * mask[2][1] +
+               old[shared_pos + 1 + BLOCK_X].b * mask[2][2];
+
+    result[y * screen.sizeX + x] = {(unsigned char)r, (unsigned char)g, (unsigned char)b};
+
+}
 
 __global__ void calculatePixel(Screen::ScreenRef screen, Sphere* d_spheres, unsigned int spheresSize, Camera camera) {
     unsigned int x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -97,16 +173,29 @@ __global__ void calculatePixel(Screen::ScreenRef screen, Sphere* d_spheres, unsi
 //    }
 //    if (closest == nullptr) return;
 
-    Sphere *sphere = d_spheres;
-    double delta = pow((direction.dot(camera.origin - sphere->center)), 2) - ((camera.origin -
-                                                                               sphere->center).squared() -
-                                                                              sphere->radius * sphere->radius);
-    if (delta < 0) return;
+    for (int i = 0; i < spheresSize; ++i) {
+        Sphere *sphere = d_spheres + i;
+        double delta = pow((direction.dot(camera.origin - sphere->center)), 2) - ((camera.origin -
+                                                                                   sphere->center).squared() -
+                                                                                  sphere->radius * sphere->radius);
+        if (delta < 0) continue;
 
+        double distance = -(direction.dot(camera.origin - sphere->center)) - sqrt(delta);
+        Vector3 normal = ((camera.origin + distance * direction) - sphere->center).normalize();
 
+        Vector3 lightDir = Vector3{1, 1, 1}.normalize();
+        double color = lightDir.dot(normal);
+        if (color < 0) color = 0;
+        else if (color > 1) {
+            color = 1;
+        }
 
-    screen.d_image[x + screen.sizeX * y] = {(unsigned char)(delta / (sphere->radius) / (sphere->radius) * 128), 0, 0};
-
+        double shiny = pow(color , 7) * color * 255;
+        double red = 10 + color * sphere->color.r + shiny;
+        double green = 10 + color * sphere->color.g + shiny;
+        double blue = 10 + color * sphere->color.b + shiny;
+        screen.d_image[x + screen.sizeX * y] = {clip(red), clip(green), clip(blue)};
+    }
 
 }
 
@@ -118,30 +207,29 @@ int main(){
 //    screen.cudaExecute(gradient_triangle, A, B, C, Color {255, 0, 0}, Color {0, 255, 0}, Color {0, 0, 255});
 //    screen.copy(cudaMemcpyDeviceToHost);
 //    screen.save("out.ppm");
-    std::vector<Sphere> spheres{{{0, 0, -100}, 10.0}};
+    std::vector<Sphere> spheres{{{0, 0, -100}, 10.0, {255, 0, 0}},
+                                {{-5, 1, -90},  7.0, {0, 0, 255}}};
     Sphere* d_spheres;
     cudaMalloc(&d_spheres, sizeof(Sphere) * spheres.size());
     cudaMemcpy(d_spheres, spheres.data(), spheres.size() * sizeof(Sphere), cudaMemcpyHostToDevice);
 
-    Camera camera {60.0/180.0 * 3.1415, 1920, 1080};
+    Camera camera {90.0/180.0 * 3.1415, 1920, 1080};
 
     screen.cudaExecute(calculatePixel, d_spheres, spheres.size(), camera);
+
+    convMask c{1, 1, 1,
+               1, 1, 1,
+               1, 1, 1};
+
+    Color* result;
+    cudaMalloc(&result, sizeof(Color) * screen.sizeX * screen.sizeY);
+    convolution<<<dim3((screen.sizeX + BLOCK_X - 3)/(BLOCK_X-2), (screen.sizeY + BLOCK_Y - 3)/(BLOCK_Y-2)), dim3(BLOCK_X, BLOCK_Y)>>>(screen, c, result);
+    cudaFree(screen.d_image);
+    screen.d_image = result;
+
     screen.copy(cudaMemcpyDeviceToHost);
     screen.save("out.ppm");
-//    for (unsigned int y = 0; y < 100; ++y) {
-//        for (unsigned int x = 0; x < 300; ++x) {
-//            Vector3 direction = directionFromXY(camera, x, y);
-//            Sphere *sphere = spheres.data();
-//            double delta = pow((direction.dot(camera.origin - sphere->center)), 2) - ((camera.origin -
-//                                                                                       sphere->center).squared() -
-//                                                                                      sphere->radius * sphere->radius);
-//            if (delta > 0) cout << "#";
-//            else cout << " ";
-//        }
-//        cout << "\n";
-//    }
 
-
-
+    cudaDeviceSynchronize();
     return 0;
 }

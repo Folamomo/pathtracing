@@ -6,6 +6,7 @@
 #define CUDATEST_COLOR_CUH
 
 
+
 struct Color {unsigned char r, g, b;};
 
 __host__ __device__ Color operator * (const Color& c, float f);
