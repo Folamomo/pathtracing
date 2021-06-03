@@ -7,11 +7,10 @@
 
 
 #include "Matrix4.cuh"
-#include "Screen.cuh"
 
 class Camera {
 public:
-    Camera(double fov, unsigned int x, unsigned int y);
+    Camera(float fov, unsigned int x, unsigned int y);
 
 public:
     Matrix4 position;
@@ -20,7 +19,6 @@ public:
     Vector3 topLeft;
     Vector3 pixelDx, pixelDy;
     Vector3 origin;
-
 };
 
 

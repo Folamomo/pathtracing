@@ -4,6 +4,6 @@
 
 #include "Sphere.cuh"
 
-Sphere::Sphere(const Vector3 &center, double radius, const Color &color) : radius(radius), center(center),
-                                                                           color(color) {
+Sphere::Sphere(const Vector3 &center, double radius, const ColorF &color) : radius(radius), center(center),
+                                                                            color(color) {
 }

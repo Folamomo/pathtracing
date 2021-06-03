@@ -8,21 +8,20 @@
 
 class Vector3 {
 public:
-    double x, y, z;
+    float x, y, z;
 
-    __device__ __host__ Vector3(double x, double y, double z);
-
-    Vector3();
-
+    __device__ __host__ Vector3(float x, float y, float z);
+    Vector3() = default;
     __device__ __host__ Vector3& normalize();
-    __device__ __host__ double norm() const;
-    __device__ __host__ double dot(Vector3 other) const;
-    __device__ __host__ double squared() const;
+    __device__ __host__ float norm() const;
+    __device__ __host__ float dot(Vector3 other) const;
+    __device__ __host__ Vector3 cross(Vector3 other) const;
+    __device__ __host__ float squared() const;
 
 
 };
 
-__device__ __host__ Vector3 operator *(double s, const Vector3& v);
+__device__ __host__ Vector3 operator *(float s, const Vector3& v);
 __device__ __host__ Vector3 operator +(const Vector3& l, const Vector3& v);
 __device__ __host__ Vector3 operator -(const Vector3& l, const Vector3& v);
 __device__ __host__ Vector3 operator -(const Vector3& l);
