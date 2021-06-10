@@ -108,8 +108,8 @@ __global__  void calculatePixel(
         float closest_distance;
         Vector3 ray = directionFromXY(c_camera, x, y, &dev_random[id]);
         int closest_id = cast_ray(ray, c_camera.origin, as, edges1, edges2, triangles_n, &closest_distance);
-        const Material& material = d_materials[d_triangles[closest_id].material];
         if (closest_id >= 0) {
+            const Material& material = d_materials[d_triangles[closest_id].material];
             //emission color
             final_color += material.emit_color * material.emit;
             //specular color

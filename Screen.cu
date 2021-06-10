@@ -15,37 +15,6 @@ __global__ void cast_kernel(From* source, To* destination, size_t n){
 }
 
 
-__global__ void convolution(Screen screen, ConvMask mask){
-    __shared__ ColorF old[BLOCK_X * BLOCK_Y];
-    uint x = threadIdx.x - 1 + blockIdx.x * (blockDim.x - 2);
-    uint y = threadIdx.y - 1 + blockIdx.y * (blockDim.y - 2);
-
-    if (x >= screen.sizeX || y >= screen.sizeY) return;
-
-    x = x < 0 ? 0 : x >= screen.sizeX ? screen.sizeX - 1 : x;
-    y = y < 0 ? 0 : y >= screen.sizeY ? screen.sizeY - 1 : y;
-    unsigned int shared_pos = threadIdx.x + threadIdx.y * BLOCK_X;
-    old[shared_pos] = screen.d_image[y * screen.sizeX + x];
-
-    if (threadIdx.x == 0 || threadIdx.y == 0 || threadIdx.x == BLOCK_X - 1 || threadIdx.y == BLOCK_Y - 1 ) return;
-
-    __syncthreads();
-
-    ColorF result = old[shared_pos - 1 - BLOCK_X] * mask[0][0] +
-                    old[shared_pos     - BLOCK_X] * mask[0][1] +
-                    old[shared_pos + 1 - BLOCK_X] * mask[0][2] +
-                    old[shared_pos - 1          ] * mask[1][0] +
-                    old[shared_pos              ] * mask[1][1] +
-                    old[shared_pos + 1          ] * mask[1][2] +
-                    old[shared_pos - 1 + BLOCK_X] * mask[2][0] +
-                    old[shared_pos     + BLOCK_X] * mask[2][1] +
-                    old[shared_pos + 1 + BLOCK_X] * mask[2][2];
-
-
-    screen.d_imageC[y * screen.sizeX + x] = {(unsigned char)result.r, (unsigned char)result.g, (unsigned char)result.b};
-
-}
-
 
 Screen::Screen(unsigned int x, unsigned int y): sizeX(x), sizeY(y) {
     implementations.emplace_back(x, y);
@@ -105,9 +74,6 @@ void Screen::copyAndSave(const char *path) {
     save(path);
 }
 
-__device__ __host__ Vector3 Screen::getRandomRayInPixel(unsigned int x, unsigned int y) {
-    return Vector3();
-}
 
 Screen::ScreenImp::ScreenImp(unsigned int sizeX, unsigned int sizeY) : sizeX(sizeX), sizeY(sizeY) {
     image = (ColorC*)malloc(sizeX * sizeY * sizeof(ColorC));

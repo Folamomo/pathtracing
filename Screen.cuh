@@ -17,8 +17,8 @@
 #include <iostream>
 #include <deque>
 
-#define BLOCK_X 32
-#define BLOCK_Y 32
+#define BLOCK_X 16
+#define BLOCK_Y 16
 
 class Screen {
 private:
@@ -44,16 +44,6 @@ public:
     Screen(unsigned int x, unsigned int y);
 
 
-    template<typename F, typename... A>
-    void cudaExecute(F f, A... a) {
-        cudaError error = cudaGetLastError();
-        if (error != cudaSuccess) std::cout << "Error before cudaExecute: " << cudaGetErrorString(error);
-        f<<<dim3((sizeX + BLOCK_X - 1)/BLOCK_X, (sizeY + BLOCK_Y - 1)/BLOCK_Y), dim3(BLOCK_X, BLOCK_Y)>>>(*this, a...);
-        cudaDeviceSynchronize();
-        error = cudaGetLastError();
-        if (error != cudaSuccess) std::cout << "Error in cudaExecute: " << cudaGetErrorString(error);
-    }
-
     __device__ ColorF* operator[](size_t row);
 
     //copies memory from/to device
@@ -69,8 +59,6 @@ public:
 
     //frees resources if needed
     static void removeAll();
-
-    __device__ __host__ Vector3 getRandomRayInPixel(unsigned int x, unsigned int y);
 };
 
 

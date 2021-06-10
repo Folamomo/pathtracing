@@ -1,14 +1,10 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#include "Vector2.cuh"
 #include "ColorF.cuh"
 #include "Screen.cuh"
 #include "Matrix4.cuh"
-#include "Sphere.cuh"
 #include "Camera.cuh"
-#include "ConvMask.cuh"
 #include "Renderer.cuh"
-#include "Texture.cuh"
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
@@ -17,6 +13,7 @@
 #include <iostream>
 #include <vector>
 #include <stdio.h>
+#include "loader.cuh"
 
 using namespace std;
 
@@ -31,23 +28,57 @@ int main(){
                       {},
                       {120.0/180.0 * 3.1415, 1920, 1080}};
 
+    objl::Loader Loader;
+    std::ofstream file("out.txt");
+    // Load .obj File
+    bool loadout = Loader.LoadFile("boxes.obj");
+    if (loadout) {
 
-    renderer.scene.vertices.push_back({0.1, 0, -10});
-    renderer.scene.vertices.push_back({1, 3, -10});
-    renderer.scene.vertices.push_back({3, 3, -10});
-    renderer.scene.vertices.push_back({3, 0, -8});
-    renderer.scene.vertices.push_back({0, 1, -10.1});
-    renderer.scene.vertices.push_back({-4, -4, -10});
-    renderer.scene.vertices.push_back({4, -4, -13});
-    renderer.scene.vertices.push_back({4, 4, -13});
-    renderer.scene.vertices.push_back({-4, 4, -10});
-    renderer.scene.materials.push_back({{}, {255, 0, 0}, 0.9, {}, 0.1});
-    renderer.scene.materials.push_back({{}, {255, 255, 0}, 0.9, {}, 0.1});
-    renderer.scene.materials.push_back({{}, {}, 0.3, {}, 0.7});
-    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
-    renderer.scene.triangles.push_back({4, 3, 2, 0,0,0,1});
-    renderer.scene.triangles.push_back({5, 6, 7, 0,0,0,2});
-    renderer.scene.triangles.push_back({8, 5, 7, 0,0,0, 2});
+        // Material
+        renderer.scene.materials.push_back({{}, {255, 0, 0}, 1, {255,255,255}, 0});
+        renderer.scene.materials.push_back({{}, {0, 255, 0}, 0.5, {255,255,255}, 0.5});
+        renderer.scene.materials.push_back({{}, {255,105,180}, 0.5, {255,255,255}, 0.5});
+        // Go through each loaded mesh and out its contents
+        unsigned int offset = 0;
+        for (int i = 0; i < Loader.LoadedMeshes.size(); i++) {
+
+            objl::Mesh curMesh = Loader.LoadedMeshes[i];
+
+            // Vertices
+            for (int j = 0; j < curMesh.Vertices.size(); j++) {
+                renderer.scene.vertices.push_back({curMesh.Vertices[j].Position.X, curMesh.Vertices[j].Position.Y, curMesh.Vertices[j].Position.Z});
+            }
+
+            // Faces
+            // iterate over indices, 3 indices create triangle face
+            for (int j = 0; j < curMesh.Indices.size(); j += 3)
+            {
+                int a = curMesh.Indices[j] + offset;
+                int b = curMesh.Indices[j + 1] + offset;
+                int c = curMesh.Indices[j + 2] + offset;
+                renderer.scene.triangles.push_back({static_cast<unsigned short>(a), static_cast<unsigned short>(b), static_cast<unsigned short>(c), 0,0,0, static_cast<unsigned short>(i)});
+            }
+            offset += curMesh.Vertices.size();
+        }
+    }
+
+
+//    renderer.scene.vertices.push_back({0.23, 2.08, 0.23-5});
+//    renderer.scene.vertices.push_back({0.23, 2.55, 0.23-5});
+//    renderer.scene.vertices.push_back({-0.23, 2.08, 0.23-5});
+//    renderer.scene.vertices.push_back({-0.23, 2.55, 0.23-5});
+//    renderer.scene.vertices.push_back({0.23, 2.08, -0.23-5});
+//    renderer.scene.vertices.push_back({0.23, 2.55, -0.23-5});
+//    renderer.scene.vertices.push_back({-0.23, 2.08, -0.23-5});
+//    renderer.scene.vertices.push_back({-0.23, 2.55, -0.23-5});
+//    renderer.scene.materials.push_back({{}, {255, 0, 0}, 0.9, {}, 0.1});
+//    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
+//    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
+//    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
+//    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
+//    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
+//    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
+
     renderer.render();
 //    ConvMask c{1, 1, 1,
 //               1, 1, 1,
@@ -61,6 +92,7 @@ int main(){
     renderer.screen.copyAndSave("out.ppm");
 
 
+    file.close();
 
     return 0;
 }
