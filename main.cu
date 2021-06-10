@@ -80,15 +80,8 @@ int main(){
 //    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
 
     renderer.render();
-//    ConvMask c{1, 1, 1,
-//               1, 1, 1,
-//               1, 1, 1};
 
     cudaDeviceSynchronize();
-    //convolution<<<dim3((renderer.screen.sizeX + BLOCK_X - 3)/(BLOCK_X-2), (renderer.screen.sizeY + BLOCK_Y - 3)/(BLOCK_Y-2)), dim3(BLOCK_X, BLOCK_Y)>>>(renderer.screen, c);
-
-//    renderer.screen.copy(cudaMemcpyDeviceToHost);
-//    cudaMemcpy(renderer.screen.d_image, sky.img, sizeof(ColorF) * renderer.screen.sizeX * renderer.screen.sizeY, cudaMemcpyHostToDevice);
     renderer.screen.copyAndSave("out.ppm");
 
 

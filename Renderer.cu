@@ -130,6 +130,7 @@ __global__  void calculatePixel(
     screen.d_image[y * screen.sizeX + x] = final_color * (1.0f/raysPerPixel);
 }
 
+
 void Renderer::render() {
     uploadScene();
     curandState *dev_random;
