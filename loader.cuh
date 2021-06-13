@@ -71,52 +71,52 @@ namespace objl
         // Default Constructor
         Vector3()
         {
-            X = 0.0f;
-            Y = 0.0f;
-            Z = 0.0f;
+            x = 0.0f;
+            y = 0.0f;
+            z = 0.0f;
         }
         // Variable Set Constructor
         Vector3(float X_, float Y_, float Z_)
         {
-            X = X_;
-            Y = Y_;
-            Z = Z_;
+            x = X_;
+            y = Y_;
+            z = Z_;
         }
         // Bool Equals Operator Overload
         bool operator==(const Vector3& other) const
         {
-            return (this->X == other.X && this->Y == other.Y && this->Z == other.Z);
+            return (this->x == other.x && this->y == other.y && this->z == other.z);
         }
         // Bool Not Equals Operator Overload
         bool operator!=(const Vector3& other) const
         {
-            return !(this->X == other.X && this->Y == other.Y && this->Z == other.Z);
+            return !(this->x == other.x && this->y == other.y && this->z == other.z);
         }
         // Addition Operator Overload
         Vector3 operator+(const Vector3& right) const
         {
-            return Vector3(this->X + right.X, this->Y + right.Y, this->Z + right.Z);
+            return Vector3(this->x + right.x, this->y + right.y, this->z + right.z);
         }
         // Subtraction Operator Overload
         Vector3 operator-(const Vector3& right) const
         {
-            return Vector3(this->X - right.X, this->Y - right.Y, this->Z - right.Z);
+            return Vector3(this->x - right.x, this->y - right.y, this->z - right.z);
         }
         // Float Multiplication Operator Overload
         Vector3 operator*(const float& other) const
         {
-            return Vector3(this->X * other, this->Y * other, this->Z * other);
+            return Vector3(this->x * other, this->y * other, this->z * other);
         }
         // Float Division Operator Overload
         Vector3 operator/(const float& other) const
         {
-            return Vector3(this->X / other, this->Y / other, this->Z / other);
+            return Vector3(this->x / other, this->y / other, this->z / other);
         }
 
         // Positional Variables
-        float X;
-        float Y;
-        float Z;
+        float x;
+        float y;
+        float z;
     };
 
     // Structure: Vertex
@@ -216,21 +216,21 @@ namespace objl
         // Vector3 Cross Product
         Vector3 CrossV3(const Vector3 a, const Vector3 b)
         {
-            return Vector3(a.Y * b.Z - a.Z * b.Y,
-                           a.Z * b.X - a.X * b.Z,
-                           a.X * b.Y - a.Y * b.X);
+            return Vector3(a.y * b.z - a.z * b.y,
+                           a.z * b.x - a.x * b.z,
+                           a.x * b.y - a.y * b.x);
         }
 
         // Vector3 Magnitude Calculation
         float MagnitudeV3(const Vector3 in)
         {
-            return (sqrtf(powf(in.X, 2) + powf(in.Y, 2) + powf(in.Z, 2)));
+            return (sqrtf(powf(in.x, 2) + powf(in.y, 2) + powf(in.z, 2)));
         }
 
         // Vector3 DotProduct
         float DotV3(const Vector3 a, const Vector3 b)
         {
-            return (a.X * b.X) + (a.Y * b.Y) + (a.Z * b.Z);
+            return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
         }
 
         // Angle between 2 Vector3 Objects
@@ -258,7 +258,7 @@ namespace objl
         // Vector3 Multiplication Opertor Overload
         Vector3 operator*(const float& left, const Vector3& right)
         {
-            return Vector3(right.X * left, right.Y * left, right.Z * left);
+            return Vector3(right.x * left, right.y * left, right.z * left);
         }
 
         // A test to see if P1 is on the same side as P2 of a line segment ab
@@ -273,7 +273,7 @@ namespace objl
                 return false;
         }
 
-        // Generate a cross produect normal for a triangle
+        // Generate a cross product normal for a triangle
         Vector3 GenTriNormal(Vector3 t1, Vector3 t2, Vector3 t3)
         {
             Vector3 u = t2 - t1;
@@ -534,9 +534,9 @@ namespace objl
                     Vector3 vpos;
                     algorithm::split(algorithm::tail(curline), spos, " ");
 
-                    vpos.X = std::stof(spos[0]);
-                    vpos.Y = std::stof(spos[1]);
-                    vpos.Z = std::stof(spos[2]);
+                    vpos.x = std::stof(spos[0]);
+                    vpos.y = std::stof(spos[1]);
+                    vpos.z = std::stof(spos[2]);
 
                     Positions.push_back(vpos);
                 }
@@ -559,9 +559,9 @@ namespace objl
                     Vector3 vnor;
                     algorithm::split(algorithm::tail(curline), snor, " ");
 
-                    vnor.X = std::stof(snor[0]);
-                    vnor.Y = std::stof(snor[1]);
-                    vnor.Z = std::stof(snor[2]);
+                    vnor.x = std::stof(snor[0]);
+                    vnor.y = std::stof(snor[1]);
+                    vnor.z = std::stof(snor[2]);
 
                     Normals.push_back(vnor);
                 }
@@ -853,7 +853,7 @@ namespace objl
         }
 
         // Triangulate a list of vertices into a face by printing
-        //	inducies corresponding with triangles within it
+        //	indicies corresponding with triangles within it
         void VertexTriangluation(std::vector<unsigned int>& oIndices,
                                  const std::vector<Vertex>& iVerts)
         {
@@ -1087,9 +1087,9 @@ namespace objl
                     if (temp.size() != 3)
                         continue;
 
-                    tempMaterial.Ka.X = std::stof(temp[0]);
-                    tempMaterial.Ka.Y = std::stof(temp[1]);
-                    tempMaterial.Ka.Z = std::stof(temp[2]);
+                    tempMaterial.Ka.x = std::stof(temp[0]);
+                    tempMaterial.Ka.y = std::stof(temp[1]);
+                    tempMaterial.Ka.z = std::stof(temp[2]);
                 }
                 // Diffuse Color
                 if (algorithm::firstToken(curline) == "Kd")
@@ -1100,9 +1100,9 @@ namespace objl
                     if (temp.size() != 3)
                         continue;
 
-                    tempMaterial.Kd.X = std::stof(temp[0]);
-                    tempMaterial.Kd.Y = std::stof(temp[1]);
-                    tempMaterial.Kd.Z = std::stof(temp[2]);
+                    tempMaterial.Kd.x = std::stof(temp[0]);
+                    tempMaterial.Kd.y = std::stof(temp[1]);
+                    tempMaterial.Kd.z = std::stof(temp[2]);
                 }
                 // Specular Color
                 if (algorithm::firstToken(curline) == "Ks")
@@ -1113,9 +1113,9 @@ namespace objl
                     if (temp.size() != 3)
                         continue;
 
-                    tempMaterial.Ks.X = std::stof(temp[0]);
-                    tempMaterial.Ks.Y = std::stof(temp[1]);
-                    tempMaterial.Ks.Z = std::stof(temp[2]);
+                    tempMaterial.Ks.x = std::stof(temp[0]);
+                    tempMaterial.Ks.y = std::stof(temp[1]);
+                    tempMaterial.Ks.z = std::stof(temp[2]);
                 }
                 // Specular Exponent
                 if (algorithm::firstToken(curline) == "Ns")

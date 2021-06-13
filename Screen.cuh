@@ -8,7 +8,6 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include "ColorF.cuh"
-#include "Vector2.cuh"
 #include "ColorC.cuh"
 #include "Vector3.cuh"
 #include <cstdio>

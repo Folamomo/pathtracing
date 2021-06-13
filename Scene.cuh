@@ -9,17 +9,16 @@
 #include "Vector3.cuh"
 #include "Triangle.h"
 #include "Material.cuh"
-#include "Texture.cuh"
+#include "Mesh.cuh"
 
 
 class Scene {
 public:
 //    Scene(const char *skybox);
 
-    std::vector<Vector3> vertices;
-    std::vector<Material> materials;
-    std::vector<Triangle> triangles;
+    std::vector<Mesh> meshes;
 
+    void loadObj(const char* path);
 //    Texture skybox;
 };
 

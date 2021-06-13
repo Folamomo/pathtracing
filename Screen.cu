@@ -3,7 +3,6 @@
 //
 
 #include "Screen.cuh"
-#include "ConvMask.cuh"
 
 std::deque<Screen::ScreenImp> Screen::implementations;
 
@@ -39,10 +38,10 @@ void Screen::save(const char *path) const {
     /* PPM header format:
      *
      * P6
-     * X Y 255
+     * x y 255
      *
      * P6 is a magic number denoting file format (24 bit color, binary)
-     * X, Y are image dimensions
+     * x, y are image dimensions
      * 255 is max value of every color (independent from word length)
      */
     FILE *f = fopen(path, "w");

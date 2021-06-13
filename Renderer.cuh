@@ -7,27 +7,42 @@
 
 
 #include <vector>
+#include <curand_kernel.h>
 #include "Screen.cuh"
-#include "Sphere.cuh"
 #include "Camera.cuh"
 #include "Scene.cuh"
 
 class Renderer {
 public:
-    Screen screen;
-    Scene scene;
-    Camera camera;
+    Renderer();
+
+    ~Renderer();
 
     void render();
-    void uploadScene();
 
-    Renderer(Screen &&screen, Scene &&scene, Camera &&camera);
+    void uploadScene(Scene& scene);
+    void uploadCamera(Camera& camera);
+    void uploadScreen(Screen& screen);
 
-    Vector3* d_vectors;
-    Material* d_materials;
-    Triangle* d_triangles;
-    ColorF* d_skybox_tex;
+
+    struct RendererConstants {
+        unsigned int sizeX, sizeY;
+        Vector3 topLeft;
+        Vector3 pixelDx, pixelDy;
+        Vector3 origin;
+        Vector3* vertices;
+        Material* materials;
+        unsigned int* indices;
+        unsigned int* material_index;
+        ColorF* d_image;
+        unsigned int n_triangles;
+        curandState *dev_random;
+    };
+
+private:
+    RendererConstants constants;
 };
+
 
 
 #endif //CUDATEST_RENDERER_CUH

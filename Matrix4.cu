@@ -4,8 +4,8 @@
 
 #include "Matrix4.cuh"
 
-__host__ __device__ double *Matrix4::operator[](unsigned long x) {
-    return data[x];
+__host__ __device__ double *Matrix4::operator[](unsigned long y) {
+    return data[y];
 }
 
 Matrix4::Matrix4(std::initializer_list<double> list) noexcept : data(){
@@ -44,4 +44,9 @@ Matrix4::Matrix4() :Matrix4{1, 0, 0, 0,
                             0, 1, 0, 0,
                             0, 0, 1, 0,
                             0, 0, 0, 1}{}
+
+__host__ __device__ Vector3 Matrix4::operator*(const Vector3 &other) {
+    //TODO implement
+    return other;
+}
 

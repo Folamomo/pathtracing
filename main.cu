@@ -5,15 +5,7 @@
 #include "Matrix4.cuh"
 #include "Camera.cuh"
 #include "Renderer.cuh"
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
-#include <fstream>
-#include <stdexcept>
-#include <iostream>
-#include <vector>
-#include <stdio.h>
-#include "loader.cuh"
+
 
 using namespace std;
 
@@ -23,69 +15,25 @@ using namespace std;
 
 
 int main(){
+    Screen screen{1920, 1080};
+    Camera camera{120.0/180.0 * 3.1415, 1920, 1080};
+    Scene scene;
+    scene.loadObj("boxes.obj");
 
-    Renderer renderer{{1920, 1080},
-                      {},
-                      {120.0/180.0 * 3.1415, 1920, 1080}};
+    scene.meshes[0].material = {{}, {255, 0, 0}, 1, {255,255,255}, 0};
+    scene.meshes[1].material = {{}, {0, 255, 0}, 0.5, {255,255,255}, 0.5};
+    scene.meshes[2].material = {{}, {255,105,180}, 0.5, {255,255,255}, 0.5};
 
-    objl::Loader Loader;
-    std::ofstream file("out.txt");
-    // Load .obj File
-    bool loadout = Loader.LoadFile("boxes.obj");
-    if (loadout) {
-
-        // Material
-        renderer.scene.materials.push_back({{}, {255, 0, 0}, 1, {255,255,255}, 0});
-        renderer.scene.materials.push_back({{}, {0, 255, 0}, 0.5, {255,255,255}, 0.5});
-        renderer.scene.materials.push_back({{}, {255,105,180}, 0.5, {255,255,255}, 0.5});
-        // Go through each loaded mesh and out its contents
-        unsigned int offset = 0;
-        for (int i = 0; i < Loader.LoadedMeshes.size(); i++) {
-
-            objl::Mesh curMesh = Loader.LoadedMeshes[i];
-
-            // Vertices
-            for (int j = 0; j < curMesh.Vertices.size(); j++) {
-                renderer.scene.vertices.push_back({curMesh.Vertices[j].Position.X, curMesh.Vertices[j].Position.Y, curMesh.Vertices[j].Position.Z});
-            }
-
-            // Faces
-            // iterate over indices, 3 indices create triangle face
-            for (int j = 0; j < curMesh.Indices.size(); j += 3)
-            {
-                int a = curMesh.Indices[j] + offset;
-                int b = curMesh.Indices[j + 1] + offset;
-                int c = curMesh.Indices[j + 2] + offset;
-                renderer.scene.triangles.push_back({static_cast<unsigned short>(a), static_cast<unsigned short>(b), static_cast<unsigned short>(c), 0,0,0, static_cast<unsigned short>(i)});
-            }
-            offset += curMesh.Vertices.size();
-        }
-    }
-
-
-//    renderer.scene.vertices.push_back({0.23, 2.08, 0.23-5});
-//    renderer.scene.vertices.push_back({0.23, 2.55, 0.23-5});
-//    renderer.scene.vertices.push_back({-0.23, 2.08, 0.23-5});
-//    renderer.scene.vertices.push_back({-0.23, 2.55, 0.23-5});
-//    renderer.scene.vertices.push_back({0.23, 2.08, -0.23-5});
-//    renderer.scene.vertices.push_back({0.23, 2.55, -0.23-5});
-//    renderer.scene.vertices.push_back({-0.23, 2.08, -0.23-5});
-//    renderer.scene.vertices.push_back({-0.23, 2.55, -0.23-5});
-//    renderer.scene.materials.push_back({{}, {255, 0, 0}, 0.9, {}, 0.1});
-//    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
-//    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
-//    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
-//    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
-//    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
-//    renderer.scene.triangles.push_back({0, 1, 2, 0,0,0,0});
-
+    Renderer renderer;
+    renderer.uploadScene(scene);
+    renderer.uploadScreen(screen);
+    renderer.uploadCamera(camera);
     renderer.render();
 
     cudaDeviceSynchronize();
-    renderer.screen.copyAndSave("out.ppm");
+    screen.copyAndSave("out.ppm");
 
 
-    file.close();
 
     return 0;
 }

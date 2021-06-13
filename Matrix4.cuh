@@ -16,7 +16,8 @@ public:
 
     Matrix4();
 
-    __host__ __device__ double* operator[](unsigned long x);
+    __host__ __device__ double* operator[](unsigned long y);
+    __host__ __device__ Vector3 operator * (const Vector3& other);
 
     static Matrix4 fromAxisAngle(Vector3 axis, double angle);
     static Matrix4 fromScaleFactor(double x, double y, double z);
