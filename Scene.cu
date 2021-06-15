@@ -12,6 +12,7 @@ Mesh convertMesh(const objl::Mesh& from){
     result.name = from.MeshName;
     result.indices = std::vector<unsigned int>(from.Indices);
     result.positions = std::vector<Vector3>();
+    result.transform = Matrix4::IDENTITY;
     for (const auto& v : from.Vertices){
         result.positions.emplace_back(v.Position.x, v.Position.y, v.Position.z);
     }

@@ -14,10 +14,11 @@ public:
     double data [4][4];
     Matrix4(std::initializer_list<double> data) noexcept;
 
-    Matrix4();
+    __host__ __device__ Matrix4();
 
     __host__ __device__ double* operator[](unsigned long y);
     __host__ __device__ Vector3 operator * (const Vector3& other);
+    __host__ __device__ Matrix4 operator * (Matrix4 other);
 
     static Matrix4 fromAxisAngle(Vector3 axis, double angle);
     static Matrix4 fromScaleFactor(double x, double y, double z);

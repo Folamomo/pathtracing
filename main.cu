@@ -24,6 +24,11 @@ int main(){
     scene.meshes[1].material = {{}, {0, 255, 0}, 0.5, {255,255,255}, 0.5};
     scene.meshes[2].material = {{}, {255,105,180}, 0.5, {255,255,255}, 0.5};
 
+    scene.loadObj("box.obj");
+
+    scene.meshes[3].transform = Matrix4::fromTranslationVector({0, 0, -6}) * Matrix4::fromScaleFactor(2, 1, 1) * Matrix4::fromAxisAngle({1, 0, 0}, 1);
+    scene.meshes[3].material = {{}, {0,200,200}, 0.1, {255,255,255}, 0.9};
+
     Renderer renderer;
     renderer.uploadScene(scene);
     renderer.uploadScreen(screen);

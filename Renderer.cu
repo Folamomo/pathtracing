@@ -222,33 +222,13 @@ void Renderer::uploadScene(Scene &scene) {
     for (const Mesh& mesh: scene.meshes){
         //copy data
         cudaMemcpy(constants.vertices + vertex_offset, mesh.positions.data(), mesh.positions.size() * sizeof(Vector3), cudaMemcpyHostToDevice);
-        cudaDeviceSynchronize();
-        error = cudaGetLastError();
-        if (error != cudaSuccess){
-            if (error) throw std::runtime_error(cudaGetErrorString(error));
-        }
         cudaMemcpy(constants.indices + index_offset, mesh.indices.data(), mesh.indices.size() * sizeof(unsigned int), cudaMemcpyHostToDevice);
-        cudaDeviceSynchronize();
-        error = cudaGetLastError();
-        if (error != cudaSuccess){
-            if (error) throw std::runtime_error(cudaGetErrorString(error));
-        }
         cudaMemcpy(constants.materials + material_offset, &mesh.material, sizeof(Material), cudaMemcpyHostToDevice);
-        cudaDeviceSynchronize();
-        error = cudaGetLastError();
-        if (error != cudaSuccess){
-            if (error) throw std::runtime_error(cudaGetErrorString(error));
-        }
         //call recalculation kernels
         recalculateVertices<<<(mesh.positions.size() - 1 + BLOCK_X) / BLOCK_X, BLOCK_X>>>(constants.vertices + vertex_offset, mesh.transform, mesh.positions.size());
-        cudaDeviceSynchronize();
-        error = cudaGetLastError();
-        if (error != cudaSuccess){
-            if (error) throw std::runtime_error(cudaGetErrorString(error));
-        }
         recalculateIndices<<<(mesh.indices.size()/3 - 1 + BLOCK_X) / BLOCK_X, BLOCK_X>>>(constants.indices + index_offset, constants.material_index + index_offset / 3,
                                                                                          material_offset, vertex_offset, mesh.indices.size());
-        material_offset ++;
+        material_offset++;
         vertex_offset += mesh.positions.size();
         index_offset +=  mesh.indices.size();
     }
